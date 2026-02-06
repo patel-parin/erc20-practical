@@ -65,5 +65,38 @@ contract('parin', function(accounts) {
     });
   });
 
- 
+  it('handles delegated token transfers', function() {
+    var fromAccount = accounts[2];
+    var toAccount = accounts[3];
+    var spendingAccount = accounts[4];
+
+    return parin.deployed().then(function(instance) {
+      tokenInstance = instance;
+      return tokenInstance.transfer(fromAccount, 100, { from: accounts[0] });
+    }).then(function() {
+      return tokenInstance.approve(spendingAccount, 10, { from: fromAccount });
+    }).then(function() {
+      return tokenInstance.transferFrom(fromAccount, toAccount, 9999, { from: spendingAccount });
+    }).then(assert.fail).catch(function(error) {
+      assert(error.message.indexOf('revert') >= 0);
+      return tokenInstance.transferFrom(fromAccount, toAccount, 20, { from: spendingAccount });
+    }).then(assert.fail).catch(function(error) {
+      assert(error.message.indexOf('revert') >= 0);
+      return tokenInstance.transferFrom.call(fromAccount, toAccount, 10, { from: spendingAccount });
+    }).then(function(success) {
+      assert.equal(success, true);
+      return tokenInstance.transferFrom(fromAccount, toAccount, 10, { from: spendingAccount });
+    }).then(function(receipt) {
+      assert.equal(receipt.logs.length, 1);
+      return tokenInstance.balanceOf(fromAccount);
+    }).then(function(balance) {
+      assert.equal(balance.toNumber(), 90);
+      return tokenInstance.balanceOf(toAccount);
+    }).then(function(balance) {
+      assert.equal(balance.toNumber(), 10);
+      return tokenInstance.allowance(fromAccount, spendingAccount);
+    }).then(function(allowance) {
+      assert.equal(allowance.toNumber(), 0);
+    });
+  });
 });
