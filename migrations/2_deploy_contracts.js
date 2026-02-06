@@ -1,5 +1,5 @@
 var parin = artifacts.require("./parin.sol");
 
 module.exports = function(deployer) {
-  deployer.deploy(parin);
+  deployer.deploy(parin, 1000000);
 };
