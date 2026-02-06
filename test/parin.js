@@ -1,102 +1,112 @@
-var parin = artifacts.require("./parin.sol");
+const DappToken = artifacts.require('DappToken');
 
-contract('parin', function(accounts) {
-  var tokenInstance;
+contract('DappToken', (accounts) => {
+  let tokenInstance;
 
-  it('initializes the contract with the correct values', function() {
-    return parin.deployed().then(function(instance) {
-      tokenInstance = instance;
-      return tokenInstance.name();
-    }).then(function(name) {
-      assert.equal(name, 'parin', 'has the correct name');
-      return tokenInstance.symbol();
-    }).then(function(symbol) {
-      assert.equal(symbol, 'parin', 'has the correct symbol');
-      return tokenInstance.standard();
-    }).then(function(standard) {
-      assert.equal(standard, 'parin v1.0', 'has the correct standard');
-    });
+  const admin = accounts[0];
+  const receiver = accounts[1];
+  const fromAccount = accounts[2];
+  const toAccount = accounts[3];
+  const spendingAccount = accounts[4];
+
+  before(async () => {
+    tokenInstance = await DappToken.deployed();
   });
 
-  it('allocates the initial supply upon deployment', function() {
-    return parin.deployed().then(function(instance) {
-      tokenInstance = instance;
-      return tokenInstance.totalSupply();
-    }).then(function(totalSupply) {
-      assert.equal(totalSupply.toNumber(), 1000000, 'sets the total supply to 1,000,000');
-      return tokenInstance.balanceOf(accounts[0]);
-    }).then(function(adminBalance) {
-      assert.equal(adminBalance.toNumber(), 1000000, 'it allocates the initial supply to the admin account');
-    });
+  it('initializes the contract with correct values', async () => {
+    const name = await tokenInstance.name();
+    const symbol = await tokenInstance.symbol();
+    const standard = await tokenInstance.standard();
+
+    assert.equal(name, 'DApp Token');
+    assert.equal(symbol, 'DAPP');
+    assert.equal(standard, 'DApp Token v1.0');
   });
 
-  it('transfers token ownership', function() {
-    return parin.deployed().then(function(instance) {
-      tokenInstance = instance;
-      return tokenInstance.transfer.call(accounts[1], 25000000);
-    }).then(assert.fail).catch(function(error) {
-      assert(error.message.indexOf('revert') >= 0, 'error message must contain revert');
-      return tokenInstance.transfer.call(accounts[1], 250000, { from: accounts[0] });
-    }).then(function(success) {
-      assert.equal(success, true, 'it returns true');
-      return tokenInstance.transfer(accounts[1], 250000, { from: accounts[0] });
-    }).then(function(receipt) {
-      assert.equal(receipt.logs.length, 1, 'triggers one event');
-      assert.equal(receipt.logs[0].event, 'Transfer', 'should be the "Transfer" event');
-      assert.equal(receipt.logs[0].args._from, accounts[0]);
-      assert.equal(receipt.logs[0].args._to, accounts[1]);
-      assert.equal(receipt.logs[0].args._value, 250000);
-    });
+  it('allocates the initial supply to admin', async () => {
+    const totalSupply = await tokenInstance.totalSupply();
+    const adminBalance = await tokenInstance.balanceOf(admin);
+
+    assert.equal(totalSupply.toNumber(), 1000000);
+    assert.equal(adminBalance.toNumber(), 1000000);
   });
 
-  it('approves tokens for delegated transfer', function() {
-    return parin.deployed().then(function(instance) {
-      tokenInstance = instance;
-      return tokenInstance.approve.call(accounts[1], 100);
-    }).then(function(success) {
-      assert.equal(success, true);
-      return tokenInstance.approve(accounts[1], 100, { from: accounts[0] });
-    }).then(function(receipt) {
-      assert.equal(receipt.logs.length, 1);
-      assert.equal(receipt.logs[0].event, 'Approval');
-      return tokenInstance.allowance(accounts[0], accounts[1]);
-    }).then(function(allowance) {
-      assert.equal(allowance.toNumber(), 100);
-    });
+  it('transfers token ownership', async () => {
+    // should fail
+    try {
+      await tokenInstance.transfer(receiver, web3.utils.toBN('25000000'));
+      assert.fail();
+    } catch (err) {
+      assert(err.message.includes('revert'));
+    }
+
+    // should succeed
+    const receipt = await tokenInstance.transfer(receiver, 250000, { from: admin });
+
+    assert.equal(receipt.logs.length, 1);
+    assert.equal(receipt.logs[0].event, 'Transfer');
+    assert.equal(receipt.logs[0].args._from, admin);
+    assert.equal(receipt.logs[0].args._to, receiver);
+    assert.equal(receipt.logs[0].args._value.toNumber(), 250000);
+
+    const receiverBalance = await tokenInstance.balanceOf(receiver);
+    const adminBalance = await tokenInstance.balanceOf(admin);
+
+    assert.equal(receiverBalance.toNumber(), 250000);
+    assert.equal(adminBalance.toNumber(), 750000);
   });
 
-  it('handles delegated token transfers', function() {
-    var fromAccount = accounts[2];
-    var toAccount = accounts[3];
-    var spendingAccount = accounts[4];
+  it('approves tokens for delegated transfer', async () => {
+    const receipt = await tokenInstance.approve(receiver, 100, { from: admin });
 
-    return parin.deployed().then(function(instance) {
-      tokenInstance = instance;
-      return tokenInstance.transfer(fromAccount, 100, { from: accounts[0] });
-    }).then(function() {
-      return tokenInstance.approve(spendingAccount, 10, { from: fromAccount });
-    }).then(function() {
-      return tokenInstance.transferFrom(fromAccount, toAccount, 9999, { from: spendingAccount });
-    }).then(assert.fail).catch(function(error) {
-      assert(error.message.indexOf('revert') >= 0);
-      return tokenInstance.transferFrom(fromAccount, toAccount, 20, { from: spendingAccount });
-    }).then(assert.fail).catch(function(error) {
-      assert(error.message.indexOf('revert') >= 0);
-      return tokenInstance.transferFrom.call(fromAccount, toAccount, 10, { from: spendingAccount });
-    }).then(function(success) {
-      assert.equal(success, true);
-      return tokenInstance.transferFrom(fromAccount, toAccount, 10, { from: spendingAccount });
-    }).then(function(receipt) {
-      assert.equal(receipt.logs.length, 1);
-      return tokenInstance.balanceOf(fromAccount);
-    }).then(function(balance) {
-      assert.equal(balance.toNumber(), 90);
-      return tokenInstance.balanceOf(toAccount);
-    }).then(function(balance) {
-      assert.equal(balance.toNumber(), 10);
-      return tokenInstance.allowance(fromAccount, spendingAccount);
-    }).then(function(allowance) {
-      assert.equal(allowance.toNumber(), 0);
-    });
+    assert.equal(receipt.logs.length, 1);
+    assert.equal(receipt.logs[0].event, 'Approval');
+    assert.equal(receipt.logs[0].args._owner, admin);
+    assert.equal(receipt.logs[0].args._spender, receiver);
+    assert.equal(receipt.logs[0].args._value.toNumber(), 100);
+
+    const allowance = await tokenInstance.allowance(admin, receiver);
+    assert.equal(allowance.toNumber(), 100);
+  });
+
+  it('handles delegated token transfers', async () => {
+    // send tokens to fromAccount
+    await tokenInstance.transfer(fromAccount, 100, { from: admin });
+
+    // approve spendingAccount
+    await tokenInstance.approve(spendingAccount, 10, { from: fromAccount });
+
+    // fail: more than balance
+    try {
+      await tokenInstance.transferFrom(fromAccount, toAccount, 9999, { from: spendingAccount });
+      assert.fail();
+    } catch (err) {
+      assert(err.message.includes('revert'));
+    }
+
+    // fail: more than allowance
+    try {
+      await tokenInstance.transferFrom(fromAccount, toAccount, 20, { from: spendingAccount });
+      assert.fail();
+    } catch (err) {
+      assert(err.message.includes('revert'));
+    }
+
+    // success
+    const receipt = await tokenInstance.transferFrom(fromAccount, toAccount, 10, { from: spendingAccount });
+
+    assert.equal(receipt.logs.length, 1);
+    assert.equal(receipt.logs[0].event, 'Transfer');
+    assert.equal(receipt.logs[0].args._from, fromAccount);
+    assert.equal(receipt.logs[0].args._to, toAccount);
+    assert.equal(receipt.logs[0].args._value.toNumber(), 10);
+
+    const fromBalance = await tokenInstance.balanceOf(fromAccount);
+    const toBalance = await tokenInstance.balanceOf(toAccount);
+    const allowance = await tokenInstance.allowance(fromAccount, spendingAccount);
+
+    assert.equal(fromBalance.toNumber(), 90);
+    assert.equal(toBalance.toNumber(), 10);
+    assert.equal(allowance.toNumber(), 0);
   });
 });

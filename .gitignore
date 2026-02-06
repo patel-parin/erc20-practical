@@ -1,0 +1,51 @@
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+
+# Truffle build artifacts
+build/
+build/contracts/
+
+# Ganache / local blockchain data
+db/
+*.db
+
+# Environment variables
+.env
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# VS Code
+.vscode/
+
+# IntelliJ / WebStorm
+.idea/
+
+# Coverage
+coverage/
+
+# Cache
+.cache/
+
+# Temporary files
+tmp/
+temp/
+
+# Lite-server / dist
+dist/
+
+# Solidity cache (sometimes created)
+.solcache
+
+# Truffle config backups
+truffle-config.js.bak
+truffle.js.bak
