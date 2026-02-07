@@ -1,9 +1,9 @@
 pragma solidity ^0.4.26;
 
-contract parin {
-    string  public name = "parin";
-    string  public symbol = "parin";
-    string  public standard = "parin v1.0";
+contract ParinToken {
+    string  public name = "Parin Token";
+    string  public symbol = "Parin";
+    string  public standard = "Parin v1.0";
     uint256 public totalSupply;
 
     event Transfer(

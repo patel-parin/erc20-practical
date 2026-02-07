@@ -1,6 +1,6 @@
-const DappToken = artifacts.require('DappToken');
+const ParinToken = artifacts.require('ParinToken');
 
-contract('DappToken', (accounts) => {
+contract('ParinToken', (accounts) => {
   let tokenInstance;
 
   const admin = accounts[0];
@@ -10,7 +10,7 @@ contract('DappToken', (accounts) => {
   const spendingAccount = accounts[4];
 
   before(async () => {
-    tokenInstance = await DappToken.deployed();
+    tokenInstance = await ParinToken.deployed();
   });
 
   it('initializes the contract with correct values', async () => {
@@ -18,9 +18,9 @@ contract('DappToken', (accounts) => {
     const symbol = await tokenInstance.symbol();
     const standard = await tokenInstance.standard();
 
-    assert.equal(name, 'DApp Token');
-    assert.equal(symbol, 'DAPP');
-    assert.equal(standard, 'DApp Token v1.0');
+    assert.equal(name, 'Parin Token');
+    assert.equal(symbol, 'Parin');
+    assert.equal(standard, 'Parin Token v1.0');
   });
 
   it('allocates the initial supply to admin', async () => {

@@ -1,14 +1,19 @@
-var parin = artifacts.require("parin");
-var parinTokenSale = artifacts.require("parinTokenSale");
+var ParinToken = artifacts.require("ParinToken");
+var ParinTokenSale = artifacts.require("ParinTokenSale");
 
-module.exports = async function(deployer) {
+module.exports = async function(deployer, network, accounts) {
   // Deploy token with 1,000,000 supply
-  await deployer.deploy(parin, 1000000);
-  const token = await parin.deployed();
+  await deployer.deploy(ParinToken, 1000000);
+  const token = await ParinToken.deployed();
 
-  // Token price = 0.001 ether in wei
-  const tokenPrice = 1000000000000000;
+  // Token price = 0.001 ETH
+  const tokenPrice = web3.utils.toWei("0.001", "ether");
 
   // Deploy token sale
-  await deployer.deploy(parinTokenSale, token.address, tokenPrice);
+  await deployer.deploy(ParinTokenSale, token.address, tokenPrice);
+  const sale = await ParinTokenSale.deployed();
+
+  // 🔥 MOST IMPORTANT LINE 🔥
+  // Transfer tokens from admin → sale contract
+  await token.transfer(sale.address, 750000);
 };

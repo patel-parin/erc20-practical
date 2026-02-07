@@ -1,7 +1,7 @@
-const DappToken = artifacts.require('DappToken');
-const DappTokenSale = artifacts.require('DappTokenSale');
+const ParinToken = artifacts.require('ParinToken');
+const ParinTokenSale = artifacts.require('ParinTokenSale');
 
-contract('DappTokenSale', (accounts) => {
+contract('ParinTokenSale', (accounts) => {
   let tokenInstance;
   let tokenSaleInstance;
 
@@ -12,8 +12,8 @@ contract('DappTokenSale', (accounts) => {
   let numberOfTokens;
 
   before(async () => {
-    tokenInstance = await DappToken.deployed();
-    tokenSaleInstance = await DappTokenSale.deployed();
+    tokenInstance = await ParinToken.deployed();
+    tokenSaleInstance = await ParinTokenSale.deployed();
   });
 
   it('initializes the contract with correct values', async () => {

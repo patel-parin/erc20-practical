@@ -1,16 +1,16 @@
 pragma solidity ^0.4.26;
 
-import "./parin.sol";
+import "./ParinToken.sol";
 
-contract parinTokenSale {
+contract ParinTokenSale {
     address public admin;
-    parin public tokenContract;
+    ParinToken public tokenContract;
     uint256 public tokenPrice;
     uint256 public tokensSold;
 
     event Sell(address indexed _buyer, uint256 _amount);
 
-    constructor(parin _tokenContract, uint256 _tokenPrice) public {
+    constructor(ParinToken _tokenContract, uint256 _tokenPrice) public {
         admin = msg.sender;
         tokenContract = _tokenContract;
         tokenPrice = _tokenPrice;
